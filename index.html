@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Character Sheet · Wizard’s Tower</title>
+<style>
+:root { --bg: #f4efe6; --card: #fffdf8; --ink: #1d1a17; --mute: #6b625a; --line: #d9cfc2; --acc: #7a1f1f; --ok: #2f6b3a; --warn: #a3520c; --dot: #2a2622; }
+@media (prefers-color-scheme: dark) { :root { --bg: #16130f; --card: #211d18; --ink: #ece4d8; --mute: #a59a8c; --line: #3a332b; --acc: #d26a5a; --ok: #7cc48a; --warn: #f0a15a; --dot: #ece4d8; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.45 Georgia, "Times New Roman", serif; }
+header { padding: 18px 16px 10px; max-width: 900px; margin: 0 auto; }
+header .k { font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--acc); }
+h1 { margin: 4px 0 2px; font-size: 26px; }
+#who { color: var(--mute); font-style: italic; }
+#summary { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); padding: 6px 16px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; font: 12px system-ui, sans-serif; }
+#summary a { text-decoration: none; padding: 3px 8px; border-radius: 99px; border: 1px solid var(--line); }
+#summary a.ok { color: var(--ok); } #summary a.warn { color: var(--warn); border-color: var(--warn); }
+main { max-width: 900px; margin: 0 auto; padding: 8px 16px 60px; }
+section { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 14px 0; scroll-margin-top: 50px; }
+section.todo { border-color: var(--acc); }
+h2 { font: 700 14px system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 8px; color: var(--acc); }
+h3 { font: 700 12px system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--mute); margin: 6px 0; }
+.help { color: var(--mute); font-size: 14px; margin: 6px 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px 14px; }
+.fld { display: flex; flex-direction: column; gap: 3px; font-size: 14px; }
+.fld.wide { grid-column: 1 / -1; }
+.fld > span { font: 600 12px system-ui, sans-serif; color: var(--mute); }
+.fld small { color: var(--mute); font-size: 12px; }
+input, select, textarea { font: inherit; font-size: 15px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 7px 8px; width: 100%; min-width: 0; }
+textarea { resize: vertical; }
+.cols3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 4px 18px; margin: 8px 0; }
+.row { display: flex; align-items: center; justify-content: space-between; padding: 3px 0; border-bottom: 1px dotted var(--line); gap: 8px; }
+.row > span { font-size: 15px; }
+.dots { display: inline-flex; gap: 4px; align-items: center; flex-shrink: 0; }
+.dot { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--dot); background: transparent; padding: 0; cursor: pointer; }
+.dot.on { background: var(--dot); }
+.clr { border: none; background: none; color: var(--mute); cursor: pointer; font-size: 15px; padding: 0 2px; }
+.line { display: flex; gap: 6px; align-items: center; margin: 6px 0; flex-wrap: wrap; }
+.line select { width: auto; max-width: 160px; }
+.line .grow { flex: 1 1 180px; }
+.line .num { width: 64px; flex: 0 0 64px; }
+.line .note { flex-basis: 100%; color: var(--mute); font-size: 12px; }
+.free { font: 12px system-ui, sans-serif; color: var(--mute); display: flex; align-items: center; gap: 3px; }
+.free input { width: auto; }
+button { font: 600 14px system-ui, sans-serif; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); padding: 7px 12px; cursor: pointer; }
+button.rm { font-size: 12px; padding: 5px 8px; color: var(--mute); }
+button.add { margin-top: 4px; }
+button.primary { background: var(--acc); color: #fff; border-color: var(--acc); }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+.andrew { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-size: 14px; color: var(--mute); }
+.andrew input { width: auto; }
+.chk { margin-top: 10px; font: 13px system-ui, sans-serif; }
+.chk .ok { color: var(--ok); } .chk .warn { color: var(--warn); }
+#status.ok { color: var(--ok); } #status.warn { color: var(--warn); }
+#status { font: 14px system-ui, sans-serif; min-height: 1em; }
+details { margin-top: 10px; font-size: 14px; }
+summary { cursor: pointer; color: var(--acc); font: 600 13px system-ui, sans-serif; }
+.ref { line-height: 1.6; }
+.derived { font: 600 14px system-ui, sans-serif; }
+.pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+.pick a { display: block; padding: 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); text-decoration: none; font-weight: bold; }
+.pick small { display: block; font-weight: normal; color: var(--mute); }
+a { color: var(--acc); }
+footer { text-align: center; color: var(--mute); font: 12px system-ui, sans-serif; padding: 0 16px 30px; }
+</style>
+</head>
+<body>
+<header><div class="k">Wizard’s Tower · Finish your character</div><h1>Character Sheet</h1><div id="who"></div></header>
+<nav id="summary"></nav>
+<main id="app"></main>
+<footer>Page references are to the 5th edition core books. Andrew has the final word on anything here.</footer>
+<script>
+// ---------------------------------------------------------------- rules and reference lists
+const SEND_TO = "humblemedia@gmail.com";
+
+const ATTRS = [["Strength", "Dexterity", "Stamina"], ["Charisma", "Manipulation", "Composure"], ["Intelligence", "Wits", "Resolve"]];
+const ATTR_GROUPS = ["Physical", "Social", "Mental"];
+const SKILLS = [
+  ["Athletics", "Brawl", "Craft", "Drive", "Firearms", "Larceny", "Melee", "Stealth", "Survival"],
+  ["Animal Ken", "Etiquette", "Insight", "Intimidation", "Leadership", "Performance", "Persuasion", "Streetwise", "Subterfuge"],
+  ["Academics", "Awareness", "Finance", "Investigation", "Medicine", "Occult", "Politics", "Science", "Technology"],
+];
+const NEEDS_SPECIALTY = ["Academics", "Craft", "Performance", "Science"];
+const DISTS = {
+  jack: { label: "Jack of all trades", shape: { 3: 1, 2: 8, 1: 10 }, total: 29 },
+  balanced: { label: "Balanced", shape: { 3: 3, 2: 5, 1: 7 }, total: 26 },
+  specialist: { label: "Specialist", shape: { 4: 1, 3: 3, 2: 3, 1: 3 }, total: 22 },
+};
+
+const SPLATS = {
+  vampire: { game: "Vampire: The Masquerade 5th Edition", short: "V5", book: "V5 core" },
+  werewolf: { game: "Werewolf: The Apocalypse 5th Edition", short: "W5", book: "W5 core" },
+  hunter: { game: "Hunter: The Reckoning 5th Edition", short: "H5", book: "H5 core" },
+};
+
+// W5 starting Gifts. Native at Total Renown 1, auspice at 2, tribe at 3. Renown type is what powers the Gift, not a requirement.
+const W5_NATIVE = [
+  ["Catfeet", "Honor", 146, "Perfect balance on any surface. Safe falls up to 10 m per Honor"],
+  ["Eyes of the Owl", "Wisdom", 146, "See in natural darkness"],
+  ["Hare’s Leap", "Glory", 147, "Leap great distances"],
+  ["Penumbral Senses", "Wisdom", 147, "Sense the spirit world from the physical one"],
+  ["Raging Strike", "Glory", 147, "Put Rage into a single blow"],
+  ["Staredown", "Honor", 147, "Make a foe back down with a look"],
+];
+const W5_AUSPICE = {
+  Ragabash: { page: 149, gifts: [["Blissful Ignorance", "Wisdom", 149], ["Crow’s Laughter", "Honor", 149], ["Gremlins", "Glory", 149], ["Spider’s Song", "Wisdom", 150]] },
+  Theurge: { page: 152, gifts: [["Ensnare Spirit", "Honor", 152], ["Mother’s Touch", "Glory", 153], ["Shadow Sense", "Wisdom", 153], ["Sight from Beyond", "Wisdom", 153]] },
+  Philodox: { page: 155, gifts: [["Ancestral Conviction", "Honor", 155], ["Gaia’s Candor", "Glory", 156], ["Porcupine’s Reprisal", "Glory", 156], ["Sense the True Form", "Wisdom", 156]] },
+  Galliard: { page: 158, gifts: [["Animal Magnetism", "Glory", 158], ["Howl of Assembly", "Honor", 159], ["Song of Rage", "Glory", 159], ["Song of Serenity", "Honor", 159]] },
+  Ahroun: { page: 161, gifts: [["Halt the Coward’s Flight", "Honor", 161], ["Rapid Shift", "Glory", 161], ["Razor Claws", "Glory", 162], ["Sense Danger", "Wisdom", 162]] },
+};
+const W5_TRIBE = {
+  "Children of Gaia": { renown: "Wisdom", patron: "Unicorn", page: 167, gifts: [["Brother’s Scent", "Wisdom", 167], ["Mother’s Touch (as Theurge)", "Glory", 153], ["Sense the True Form (as Philodox)", "Wisdom", 156], ["Song of Serenity (as Galliard)", "Honor", 159]] },
+  "Hart Wardens": { renown: "Glory", patron: "Stag", page: 172, gifts: [["Crow’s Laughter (as Ragabash)", "Honor", 149], ["Sacred Boundary", "Glory", 172], ["Blessed Brew", "Glory", 173]] },
+  "Black Furies": { renown: "Glory" }, "Bone Gnawers": { renown: "Honor" }, "Galestalkers": { renown: "Honor" },
+  "Ghost Council": { renown: "Wisdom" }, "Glass Walkers": { renown: "Wisdom" }, "Red Talons": { renown: "Honor" },
+  "Shadow Lords": { renown: "Glory" }, "Silent Striders": { renown: "Wisdom" }, "Silver Fangs": { renown: "Honor" },
+};
+const W5_RITES = [
+  ["Rite of Abjuration", 180, "Honor + Occult"], ["Rite of Rage", 181, "Glory + Intimidation"], ["Rite of Tranquillity", 181, "Wisdom + Performance"],
+  ["Rite of Contrition", 182, "Honor + Etiquette"], ["Rite of the Forgetful Record", 182, "Wisdom + Investigation"], ["Rite of the Living Caern", 182, "Wisdom + Craft"],
+  ["Rite of Shadow Passage", 182, "any Renown + Occult"], ["Rite of Dedication", 183, "no roll"], ["Rite of Kinseeking", 183, "Wisdom + Investigation"],
+  ["Rite of Spirit Summoning", 183, "Honor + Persuasion"], ["Rite of Binding", 184, "Glory + Occult"], ["Rite of Shame", 184, "no roll"],
+  ["Rite of Patronage", 184, ""], ["Rite of Celebration", 185, "Honor + Performance"], ["Rite of Caern Building", 185, "Wisdom + Craft"],
+  ["Rite of the Shrouded Glen", 186, ""], ["Rite of the Whispering Field", 186, ""], ["Rite of the Wolf Reborn", 186, ""],
+  ["Rite of Passage (social)", 187, ""], ["Rite of Accomplishment (social)", 187, ""], ["Gathering for the Departed (social)", 187, ""],
+  ["Rite of the Winter Wolf (social)", 187, ""], ["Satire Rite (social)", 187, ""],
+];
+
+// V5 core Discipline powers at levels 1 and 2, for the clans and predator types at this table.
+const V5_POWERS = {
+  Animalism: { 1: ["Bond Famulus", "Sense the Beast"], 2: ["Feral Whispers"] },
+  Auspex: { 1: ["Heightened Senses", "Sense the Unseen"], 2: ["Premonition"] },
+  Celerity: { 1: ["Cat’s Grace", "Rapid Reflexes"], 2: ["Fleetness"] },
+  Dominate: { 1: ["Cloud Memory", "Compel"], 2: ["Mesmerize", "Dementation (needs Obfuscate 2)"] },
+  Obfuscate: { 1: ["Cloak of Shadows", "Silence of Death"], 2: ["Unseen Passage"] },
+  Potence: { 1: ["Lethal Body", "Soaring Leap"], 2: ["Prowess"] },
+  Presence: { 1: ["Awe", "Daunt"], 2: ["Lingering Kiss"] },
+};
+
+// Advantage names to pick from. Type it if yours isn't here.
+const ADV_LIST = {
+  vampire: ["Allies", "Contacts", "Fame", "Haven", "Herd", "Influence", "Mask", "Mawla", "Resources", "Retainers", "Status", "Linguistics", "Beautiful", "Stunning", "Bloodhound", "Iron Gullet", "Bond Resistance", "High-Functioning Addict",
+    "Flaw: Ugly", "Flaw: Repulsive", "Flaw: Addiction", "Flaw: Hopeless Addiction", "Flaw: Illiterate", "Flaw: Prey Exclusion", "Flaw: Bond Junkie", "Flaw: Folkloric Bane", "Flaw: Folkloric Block", "Flaw: Stake Bait", "Flaw: Suspect", "Flaw: Shunned", "Flaw: Adversary", "Flaw: Enemy", "Flaw: Dark Secret", "Flaw: Infamy", "Flaw: Destitute", "Flaw: Known Corpse", "Flaw: Stalkers", "Flaw: Disliked", "Flaw: Despised", "Flaw: No Haven", "Flaw: Haunted", "Flaw: Compromised", "Flaw: Knowledge Hungry"],
+  werewolf: ["Allies", "Contacts", "Fame", "Mask", "Mentor", "Resources", "Spirit Pact", "Talisman", "Safe House", "Obscure Safe House", "Secure Safe House", "Caern Access", "Day Job", "Corroborated Day Job", "Linguistics", "Clement Lupus", "Beautiful", "Stunning", "Moon-Quickened", "Moon-Riled",
+    "Flaw: Caern Pariah", "Flaw: Illiterate", "Flaw: Ugly", "Flaw: Repulsive", "Flaw: Addiction", "Flaw: Hopeless Addiction", "Flaw: Folkloric Bane", "Flaw: Folkloric Block", "Flaw: Folkloric Tell", "Flaw: Crone’s Curse", "Flaw: Moon-Thrall", "Flaw: Stalker", "Flaw: Infamy", "Flaw: Dark Secret", "Flaw: Infamous Partner", "Flaw: Person of Interest", "Flaw: Serial Error", "Flaw: Adversary", "Flaw: Destitute", "Flaw: Pact Condition"],
+  hunter: ["Allies", "Contacts", "Fame", "Mask", "Mentor", "Resources", "Retainers", "Safe House", "Status", "Linguistics", "Beautiful", "Stunning",
+    "Flaw: Addiction", "Flaw: Severe Addiction", "Flaw: Illiterate", "Flaw: Ugly", "Flaw: Repulsive", "Flaw: Adversary", "Flaw: Enemy", "Flaw: Dark Secret", "Flaw: Infamy", "Flaw: Destitute", "Flaw: Stalker"],
+};
+const ADV_PAGES = { vampire: "V5 pp. 179–194", werewolf: "W5 pp. 97–105", hunter: "H5 pp. 70–79" };
+
+// ---------------------------------------------------------------- the five characters
+const PCS = {
+  thomas: {
+    splat: "hunter", player: "Brian", name: "Thomas Raveneye",
+    concept: "Dedicated soldier", ambition: "Evening the score", desire: "Protecting the innocent",
+    creed: "Martial", drive: "Vengeance", redemption: "The cell must hurt their quarry (or a similar creature), directly or by proxy",
+    attrs: { Strength: 3, Dexterity: 3, Stamina: 4, Charisma: 1, Manipulation: 2, Composure: 2, Intelligence: 2, Wits: 2, Resolve: 3 },
+    autonomous: false, skillDist: "specialist",
+    skills: { Melee: 4, Brawl: 3, Firearms: 3, Stealth: 3, Survival: 2, Persuasion: 2, Politics: 2, Awareness: 1, Occult: 1, Streetwise: 1 },
+    specs: [{ skill: "Melee", text: "Tomahawk" }],
+    edges: [{ kind: "Edge", name: "Artifact (the tomahawk)" }, { kind: "Perk", name: "Empower" }, { kind: "Perk", name: "Shield" }],
+    advantages: [
+      { name: "Resources", dots: 3, kind: "background" }, { name: "Linguistics", dots: 1, kind: "merit" }, { name: "Status", dots: 2, kind: "background" },
+      { name: "Flaw: Substance abuse", dots: 2, kind: "flaw", note: "2 dots is Severe Addiction, two dice off when you haven’t indulged. Addiction is 1 dot, one die" },
+    ],
+    touchstones: [],
+    extra: [["Wife’s name", ""], ["Do you still want the military dog and the falcon?", ""], ["Do you still have Sarah’s ring?", ""]],
+    open: ["One Advantage point left to spend", "Pick Addiction (1) or Severe Addiction (2). With Addiction you need one more Flaw point", "Touchstones, 1 to 3 people. With none, a hunter can’t recover Willpower", "Your wife’s name, and a few loose ends at the bottom"],
+  },
+  eleanor: {
+    splat: "vampire", player: "Julie", name: "Eleanor Koothrappali",
+    concept: "A reluctant vampire", ambition: "Golconda. She doesn’t want human blood", desire: "Warmth and touch",
+    clan: "Brujah", generation: "13th", bp: 1, predator: "Farmer", sire: "Steve (exiled)", humanity: 8,
+    attrs: { Strength: 3, Dexterity: 4, Stamina: 3, Charisma: 2, Manipulation: 1, Composure: 2, Intelligence: 3, Wits: 2, Resolve: 2 },
+    autonomous: false, skillDist: "balanced",
+    skills: { Survival: 3, Insight: 3, Finance: 3, Drive: 2, Firearms: 2, Stealth: 2, "Animal Ken": 2, Medicine: 2, Athletics: 1, Brawl: 1, Leadership: 1, Performance: 1, Awareness: 1, Science: 1, Technology: 1 },
+    specs: [{ skill: "Insight", text: "Empathy" }, { skill: "Animal Ken", text: "Dog Training" }, { skill: "Performance", text: "Violin" }, { skill: "Science", text: "Genetics" }],
+    disciplines: [{ name: "Celerity", dots: 2, powers: "Cat’s Grace, Rapid Reflexes" }, { name: "Presence", dots: 1, powers: "Awe" }, { name: "Animalism", dots: 1, powers: "Bond Famulus" }],
+    advantages: [
+      { name: "Haven", dots: 3, kind: "background" }, { name: "Resources", dots: 3, kind: "background" }, { name: "Mawla (Prof. Troy Malone)", dots: 1, kind: "background" },
+      { name: "Flaw: Farmer (Vegan)", dots: 2, kind: "flaw", free: true, note: "From your predator type, so it doesn’t count toward your 2" },
+    ],
+    touchstones: [{ conviction: "Animal rights", name: "Dr. Lloyd Ross, veterinarian" }, { conviction: "Motherly love", name: "Her mother, Sandra" }],
+    extra: [],
+    open: ["2 more points of Flaws, on top of Farmer. Andrew likes Suspect and Adversary (Steve)", "Settle the wording of “Motherly love”"],
+  },
+  walter: {
+    splat: "vampire", player: "Rob", name: "Walter “Toren” Haugen",
+    concept: "Private investigator chasing the Tower", ambition: "To find the Tower", desire: "",
+    clan: "Malkavian", generation: "13th", bp: 1, predator: "Pursuer", sire: "Olympia, “Madame Two-Hands”", humanity: 6,
+    attrs: { Strength: 1, Dexterity: 2, Stamina: 2, Charisma: 2, Manipulation: 3, Composure: 2, Intelligence: 4, Wits: 3, Resolve: 3 },
+    autonomous: false, skillDist: "balanced",
+    skills: { Investigation: 3, Awareness: 3, Occult: 3, Streetwise: 2, Larceny: 2, Stealth: 2, Insight: 2, Subterfuge: 2, Athletics: 1, Drive: 1, Technology: 1, "Animal Ken": 1, Firearms: 1, Persuasion: 1, Medicine: 1 },
+    specs: [{ skill: "Investigation", text: "Paranormal Mysteries" }, { skill: "Stealth", text: "Shadowing" }],
+    disciplines: [{ name: "Obfuscate", dots: 2, powers: "Silence of Death, Unseen Passage" }, { name: "Auspex", dots: 1, powers: "Sense the Unseen" }, { name: "Animalism", dots: 1, powers: "Bond Famulus (Backup)" }],
+    advantages: [
+      { name: "Bloodhound", dots: 1, kind: "merit", free: true, note: "From Pursuer" }, { name: "Contacts (drug dealers)", dots: 1, kind: "background", free: true, note: "From Pursuer" },
+      { name: "Contacts (a police lieutenant)", dots: 3, kind: "background" }, { name: "Side Hustler", dots: 1, kind: "merit" }, { name: "Resources", dots: 1, kind: "background" },
+      { name: "Haven", dots: 1, kind: "background" }, { name: "Haven: Library", dots: 1, kind: "merit" },
+      { name: "Flaw: Knowledge Hungry (the Tower)", dots: 1, kind: "flaw" }, { name: "Flaw: Prey Exclusion (children)", dots: 1, kind: "flaw" },
+    ],
+    touchstones: [
+      { conviction: "Protect children at all costs", name: "Amanda Stanford, the girl upstairs" },
+      { conviction: "When someone hurts you, pull them closer or cut them out", name: "Sofia Montenegro, his ex-wife" },
+      { conviction: "There is always another secret to uncover", name: "Malcolm Underhill, library research assistant" },
+    ],
+    extra: [["The police lieutenant’s name, and what you have on each other", ""]],
+    open: ["Your Desire, now that you’ve seen where the story starts. Short-term and low-stakes is fine"],
+  },
+  heather: {
+    splat: "werewolf", player: "Ryleigh", name: "Heather Faust",
+    concept: "A clumsy, sullen valedictorian", ambition: "", desire: "",
+    tribe: "Hart Wardens", auspice: "", patron: "Stag",
+    renown: { Glory: 2, Honor: 0, Wisdom: 0 },
+    gifts: { native: "", auspice: "", tribe: "" }, rite: "",
+    attrs: { Strength: 2, Dexterity: 1, Stamina: 2, Charisma: 2, Manipulation: 3, Composure: 2, Intelligence: 3, Wits: 3, Resolve: 4 },
+    autonomous: false, skillDist: "specialist",
+    skills: { Persuasion: 4, Etiquette: 3, Insight: 3, Academics: 3, Streetwise: 2, Politics: 2, Technology: 2, Brawl: 1, Awareness: 1, Investigation: 1 },
+    specs: [],
+    advantages: [
+      { name: "Linguistics (Latin)", dots: 1, kind: "merit", free: true, note: "Free second language, Andrew’s call" },
+      { name: "Mentor (Judge Rosalind Arquette)", dots: 4, kind: "background" }, { name: "Obscure Safe House", dots: 2, kind: "merit" }, { name: "Clement Lupus", dots: 1, kind: "merit" },
+      { name: "Flaw: Addiction (alcohol)", dots: 1, kind: "flaw" }, { name: "Flaw: Convinced she has a stalker", dots: 1, kind: "flaw" },
+    ],
+    touchstones: [{ name: "Her father, Sam" }, { name: "Her sister, Laura" }],
+    extra: [["Where is her law practice, and where is her safe house?", ""], ["Was she in her first year of law school or near the end when she changed?", ""]],
+    open: ["Auspice. Ragabash or Theurge", "Your third Renown dot, in Honor or Wisdom", "Three Gifts and one Rite", "Specialties. One for Academics (Law fits), plus one free", "She’s a lawyer now. Look again at Resources (0), Day Job, and her concept line"],
+  },
+  keefe: {
+    splat: "werewolf", player: "Christine", name: "Keefe Elliot",
+    concept: "Werewolf bard. A lover, not a fighter", ambition: "", desire: "",
+    tribe: "Children of Gaia", auspice: "Galliard", patron: "Unicorn",
+    renown: { Glory: 1, Honor: 0, Wisdom: 2 },
+    gifts: { native: "", auspice: "", tribe: "" }, rite: "",
+    attrs: { Strength: 1, Dexterity: 3, Stamina: 3, Charisma: 4, Manipulation: 2, Composure: 2, Intelligence: 1, Wits: 3, Resolve: 3 },
+    autonomous: true, skillDist: "specialist",
+    skills: { Athletics: 4, Performance: 3, Awareness: 3, Brawl: 2, Drive: 2, Insight: 2, Persuasion: 2, Larceny: 1, Survival: 1, Leadership: 1, Medicine: 1 },
+    specs: [{ skill: "Performance", text: "Flute" }, { skill: "Larceny", text: "Hotwiring" }],
+    advantages: [
+      { name: "Autonomous Learner", dots: 1, kind: "merit" },
+      { name: "Talisman: the flute (untamed)", dots: 0, kind: "background", free: true, note: "Free while it’s untamed. Dots bought later with XP" },
+    ],
+    touchstones: [],
+    extra: [["The flute’s name, if it has one yet", ""]],
+    open: ["One more Specialty. Autonomous Learner’s bonus one goes in a Skill you raised with it", "Three Gifts and one Rite. Catfeet is allowed. Gifts need Total Renown, not the Renown type they list", "6 more points of Advantages, and 2 points of Flaws", "Touchstones, 1 to 3", "Health is Stamina + 3, so 6 boxes, plus 4 in crinos"],
+  },
+};
+
+</script>
+<script>
+// ---------------------------------------------------------------- state
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const clone = o => JSON.parse(JSON.stringify(o));
+const params = new URLSearchParams(location.search);
+let pcId = (params.get("pc") || "").toLowerCase();
+let S = null; // current character state
+const KEY = () => "wt-sheet-" + pcId;
+
+function blank(splat) {
+  const attrs = {}; ATTRS.flat().forEach(a => attrs[a] = 1);
+  return { splat, player: "", name: "", concept: "", ambition: "", desire: "", attrs, autonomous: false, skillDist: "balanced", skills: {}, specs: [], advantages: [], touchstones: [], extra: [], open: [],
+    clan: "", generation: "13th", bp: 1, predator: "", sire: "", humanity: 7, disciplines: [],
+    tribe: "", auspice: "", patron: "", renown: { Glory: 0, Honor: 0, Wisdom: 0 }, gifts: { native: "", auspice: "", tribe: "" }, rite: "",
+    creed: "", drive: "", redemption: "", edges: [], notes: "", andrew: {} };
+}
+function load() {
+  let base;
+  if (PCS[pcId]) base = Object.assign(blank(PCS[pcId].splat), clone(PCS[pcId]));
+  else if (["vampire", "werewolf", "hunter"].includes(pcId)) base = blank(pcId);
+  else return null;
+  base.andrew = base.andrew || {}; base.notes = base.notes || "";
+  try {
+    const d = localStorage.getItem(KEY());
+    if (d) { const saved = JSON.parse(d); if (saved && saved.splat === base.splat) { saved.open = base.open; return saved; } }
+  } catch (e) {}
+  return base;
+}
+function save() { try { localStorage.setItem(KEY(), JSON.stringify(S)); } catch (e) {} }
+
+// ---------------------------------------------------------------- checks
+function countBy(vals) { const c = {}; vals.forEach(v => c[v] = (c[v] || 0) + 1); return c; }
+function sig(arr) { return arr.slice().sort((a, b) => b - a).join(","); }
+const STD_ATTR = [4, 3, 3, 3, 2, 2, 2, 2, 1];
+function attrOK() {
+  const v = ATTRS.flat().map(a => +S.attrs[a] || 0);
+  if (sig(v) === sig(STD_ATTR)) return [true, "One 4, three 3s, four 2s, one 1"];
+  if (S.autonomous) {
+    const ok = new Set();
+    for (let i = 0; i < 9; i++) for (let j = 0; j < 9; j++) if (i !== j) {
+      const t = STD_ATTR.slice(); t[i]--; t[j]++;
+      if (t[i] >= 1 && t[j] <= 4 && t.filter(x => x === 4).length === 1) ok.add(sig(t));
+    }
+    if (ok.has(sig(v))) return [true, "Standard spread with one dot moved (Autonomous Learner)"];
+    return [false, "With Autonomous Learner you place the standard spread (one 4, three 3s, four 2s, one 1) and move one dot. Exactly one 4, nothing at 5, nothing below 1"];
+  }
+  return [false, "Needs one 4, three 3s, four 2s and one 1. You have " + sig(v).replace(/,/g, " ")];
+}
+function skillVals() { return SKILLS.flat().map(k => +S.skills[k] || 0).filter(x => x > 0); }
+function skillOK() {
+  const d = DISTS[S.skillDist]; const v = skillVals(); const c = countBy(v); const tot = v.reduce((a, b) => a + b, 0);
+  const want = Object.entries(d.shape).sort((a, b) => b[0] - a[0]).map(([k, n]) => `${n}×${k}`).join(", ");
+  const have = [5, 4, 3, 2, 1].filter(k => c[k]).map(k => `${c[k]}×${k}`).join(", ") || "none";
+  if (!S.autonomous) {
+    const ok = [5, 4, 3, 2, 1].every(k => (c[k] || 0) === (d.shape[k] || 0));
+    return [ok, ok ? `${d.label}. ${want}` : `${d.label} needs ${want}. You have ${have}`];
+  }
+  const errs = [];
+  if (tot !== d.total) errs.push(`total dots must stay ${d.total}, you have ${tot}`);
+  if ((c[5] || 0) > 0) errs.push("no 5s");
+  const hi = (c[3] || 0) + (c[4] || 0), hiMax = (d.shape[3] || 0) + (d.shape[4] || 0);
+  if (hi > hiMax) errs.push(`no more than ${hiMax} Skills at 3 or 4`);
+  if (S.skillDist === "specialist" && (c[4] || 0) !== 1) errs.push("Specialist keeps its one Skill at 4");
+  if (S.skillDist === "balanced" && (c[3] || 0) !== 3) errs.push("Balanced keeps exactly three 3s");
+  if (S.skillDist === "jack" && (c[1] || 0) < 10) errs.push("Jack of all trades keeps at least ten 1s");
+  if ((c[4] || 0) > (d.shape[4] || 0)) errs.push("no new 4s");
+  return [errs.length === 0, errs.length ? "Autonomous Learner. " + errs.join("; ") : `${d.label}, reshaped by Autonomous Learner. ${tot} dots. ${have}`];
+}
+function specAllowance() {
+  const need = NEEDS_SPECIALTY.filter(k => (+S.skills[k] || 0) > 0);
+  let n = 1 + need.length, parts = ["1 free"];
+  if (need.length) parts.push(`${need.length} for ${need.join(", ")}`);
+  if (S.splat === "vampire" && S.predator) { n++; parts.push("1 from your predator type"); }
+  if (S.autonomous) { n++; parts.push("1 from Autonomous Learner"); }
+  return [n, parts.join(" + "), need];
+}
+function specOK() {
+  const [n, why, need] = specAllowance();
+  const used = S.specs.filter(s => s.skill && s.text.trim()).length;
+  const missing = need.filter(k => !S.specs.some(s => s.skill === k && s.text.trim()));
+  const bad = S.specs.filter(s => s.skill && s.text.trim() && !(+S.skills[s.skill] > 0)).map(s => s.skill);
+  const msgs = [`${used} of ${n} (${why})`];
+  if (missing.length) msgs.push(`${missing.join(", ")} still needs its own`);
+  if (bad.length) msgs.push(`no dots in ${bad.join(", ")}`);
+  return [used === n && !missing.length && !bad.length, msgs.join(". ")];
+}
+function advTotals() {
+  const pay = S.advantages.filter(a => !a.free && a.kind !== "flaw").reduce((t, a) => t + (+a.dots || 0), 0);
+  const fl = S.advantages.filter(a => !a.free && a.kind === "flaw").reduce((t, a) => t + (+a.dots || 0), 0);
+  const extra = Math.max(0, fl - 2);
+  const bonus = extra >= 3 ? 2 : extra === 2 ? 1 : 0;
+  return { pay, fl, extra, bonus, budget: 7 + bonus };
+}
+function advOK() {
+  const t = advTotals(); const msgs = []; let ok = true;
+  if (t.pay !== t.budget) { ok = false; msgs.push(`Advantages ${t.pay} of ${t.budget}`); } else msgs.push(`Advantages ${t.pay} of ${t.budget}`);
+  if (t.fl < 2) { ok = false; msgs.push(`Flaws ${t.fl} of at least 2, not counting free ones`); } else msgs.push(`Flaws ${t.fl}`);
+  if (t.extra > 3) { ok = false; msgs.push("house rule caps extra Flaws at 3"); }
+  if (t.extra === 1) msgs.push("one extra Flaw buys nothing on its own. A second one buys an Advantage point");
+  return [ok, msgs.join(". ")];
+}
+function touchOK() {
+  const n = S.touchstones.filter(t => (t.name || "").trim()).length;
+  return [n >= 1 && n <= 3, `${n} of 1 to 3`];
+}
+function renownOK() {
+  const r = S.renown; const tr = (W5_TRIBE[S.tribe] || {}).renown;
+  const tot = r.Glory + r.Honor + r.Wisdom;
+  if (!tr) return [false, "Pick a tribe first"];
+  const others = ["Glory", "Honor", "Wisdom"].filter(k => k !== tr);
+  const ok = r[tr] === 2 && tot === 3 && others.some(k => r[k] === 1);
+  return [ok, ok ? `Total Renown 3. That’s what Gifts check` : `${tr} 2 for your tribe, then 1 in ${others.join(" or ")}. You have Total ${tot}`];
+}
+function giftOK() {
+  const g = S.gifts; const n = ["native", "auspice", "tribe"].filter(k => g[k]).length;
+  return [n === 3 && !!S.rite, `${n} of 3 Gifts, ${S.rite ? "Rite chosen" : "no Rite yet"}`];
+}
+function discOK() {
+  const tot = S.disciplines.reduce((t, d) => t + (+d.dots || 0), 0);
+  const pw = S.disciplines.reduce((t, d) => t + (d.powers || "").split(",").filter(x => x.trim()).length, 0);
+  return [tot === 4 && pw === tot, `${tot} dots of 4 (two clan Disciplines at 2 and 1, plus 1 from your predator type). ${pw} powers, one per dot`];
+}
+function edgeOK() {
+  const e = S.edges.filter(x => x.kind === "Edge" && x.name.trim()).length, p = S.edges.filter(x => x.kind === "Perk" && x.name.trim()).length;
+  return [(e === 2 && p === 0) || (e === 1 && p === 2), `${e} Edge${e === 1 ? "" : "s"}, ${p} Perk${p === 1 ? "" : "s"}. Take two Edges, or one Edge and two Perks`];
+}
+function checks() {
+  const L = [["Attributes", ...attrOK()], ["Skills", ...skillOK()], ["Specialties", ...specOK()], ["Advantages and Flaws", ...advOK()], ["Touchstones", ...touchOK()]];
+  if (S.splat === "vampire") L.splice(3, 0, ["Disciplines", ...discOK()]);
+  if (S.splat === "werewolf") L.splice(3, 0, ["Renown", ...renownOK()], ["Gifts and Rite", ...giftOK()]);
+  if (S.splat === "hunter") L.splice(3, 0, ["Edges and Perks", ...edgeOK()]);
+  return L;
+}
+
+// ---------------------------------------------------------------- render helpers
+function dotsInput(path, val, max = 5, min = 0) {
+  let h = `<span class="dots" data-path="${path}" role="group">`;
+  for (let i = 1; i <= max; i++) h += `<button type="button" class="dot${i <= val ? " on" : ""}" data-v="${i}" aria-label="${i}"></button>`;
+  return h + `<button type="button" class="clr" data-v="${min}" title="Clear">×</button></span>`;
+}
+function field(label, path, val, opts = {}) {
+  const id = "f-" + path.replace(/\W/g, "_");
+  const inp = opts.area ? `<textarea id="${id}" data-path="${path}" rows="${opts.rows || 2}" placeholder="${esc(opts.ph || "")}">${esc(val)}</textarea>`
+    : opts.options ? `<select id="${id}" data-path="${path}"><option value="">Choose…</option>${opts.options.map(o => { const [v, l] = Array.isArray(o) ? o : [o, o]; return `<option value="${esc(v)}"${v === val ? " selected" : ""}>${esc(l)}</option>`; }).join("")}</select>`
+    : `<input id="${id}" data-path="${path}" value="${esc(val)}" placeholder="${esc(opts.ph || "")}"${opts.list ? ` list="${opts.list}"` : ""}>`;
+  return `<label class="fld${opts.wide ? " wide" : ""}" for="${id}"><span>${label}</span>${inp}${opts.hint ? `<small>${opts.hint}</small>` : ""}</label>`;
+}
+function andrewBox(key) {
+  return `<label class="andrew"><input type="checkbox" data-andrew="${key}"${S.andrew[key] ? " checked" : ""}><span>Andrew can decide this part for me</span></label>`;
+}
+function section(id, title, inner, help) {
+  return `<section id="sec-${id}"><h2>${title}</h2>${help ? `<p class="help">${help}</p>` : ""}${inner}<div class="chk" data-chk="${id}"></div></section>`;
+}
+
+// ---------------------------------------------------------------- sections
+function secIdentity() {
+  const sp = S.splat; let x = "";
+  x += field("Player", "player", S.player) + field("Character", "name", S.name) + field("Concept", "concept", S.concept, { wide: true });
+  if (sp === "vampire") {
+    x += field("Clan", "clan", S.clan) + field("Generation", "generation", S.generation) + field("Blood Potency", "bp", S.bp) + field("Predator type", "predator", S.predator) + field("Sire", "sire", S.sire, { wide: true }) + field("Humanity", "humanity", S.humanity);
+  }
+  if (sp === "werewolf") {
+    x += field("Tribe", "tribe", S.tribe, { options: Object.keys(W5_TRIBE) }) + field("Auspice", "auspice", S.auspice, { options: Object.keys(W5_AUSPICE) }) + field("Patron spirit", "patron", S.patron);
+  }
+  if (sp === "hunter") {
+    x += field("Creed", "creed", S.creed, { options: ["Entrepreneurial", "Faithful", "Inquisitive", "Martial", "Underground"] }) + field("Drive", "drive", S.drive, { options: ["Curiosity", "Vengeance", "Oath", "Greed", "Pride", "Envy", "Atonement"] }) + field("Redemption", "redemption", S.redemption, { wide: true, hint: "Fixed by your Drive (H5 pp. 128–129). How you climb out of Despair" });
+  }
+  x += field("Ambition", "ambition", S.ambition, { wide: true, hint: "Long-term. Measurable, or a concrete thing in the chronicle" });
+  x += field("Desire", "desire", S.desire, { wide: true, hint: "Short-term, for the next session. It goes on an index card" });
+  return section("who", "Who they are", `<div class="grid">${x}</div>`);
+}
+function secAttrs() {
+  let x = `<div class="cols3">`;
+  ATTRS.forEach((g, i) => { x += `<div><h3>${ATTR_GROUPS[i]}</h3>` + g.map(a => `<div class="row"><span>${a}</span>${dotsInput("attrs." + a, S.attrs[a], 5, 1)}</div>`).join("") + `</div>`; });
+  x += `</div><p class="derived" id="derived"></p>`;
+  x += `<label class="andrew"><input type="checkbox" data-path="autonomous"${S.autonomous ? " checked" : ""}><span>I have <b>Autonomous Learner</b> (house rule, 1 Advantage point). Move one Attribute dot, reshape Skills, and gain a bonus Specialty</span></label>`;
+  return section("attrs", "Attributes", x, "Place one at 4, three at 3, four at 2, and one at 1. Health is Stamina + 3. Willpower is Composure + Resolve.");
+}
+function secSkills() {
+  let x = field("Skill spread", "skillDist", S.skillDist, { options: Object.entries(DISTS).map(([k, d]) => [k, `${d.label} · ${Object.entries(d.shape).sort((a, b) => b[0] - a[0]).map(([v, n]) => `${n}×${v}`).join(", ")}`]) });
+  x += `<div class="cols3">`;
+  SKILLS.forEach((g, i) => { x += `<div><h3>${ATTR_GROUPS[i]}</h3>` + g.map(k => `<div class="row"><span>${k}${NEEDS_SPECIALTY.includes(k) ? "<sup>*</sup>" : ""}</span>${dotsInput("skills." + k, +S.skills[k] || 0)}</div>`).join("") + `</div>`; });
+  x += `</div><p class="help">* Academics, Craft, Performance and Science each get a free Specialty if you have dots in them.</p>`;
+  return section("skills", "Skills", x);
+}
+function secSpecs() {
+  const opts = SKILLS.flat().map(k => `<option${""}>${k}</option>`).join("");
+  let x = `<div id="specs">` + S.specs.map((s, i) => `<div class="line"><select data-spec="${i}" data-f="skill"><option value="">Skill…</option>${SKILLS.flat().map(k => `<option${k === s.skill ? " selected" : ""}>${k}</option>`).join("")}</select><input data-spec="${i}" data-f="text" value="${esc(s.text)}" placeholder="e.g. Flute, Tomahawk, Law"><button type="button" class="rm" data-rmspec="${i}">Remove</button></div>`).join("") + `</div>`;
+  x += `<button type="button" class="add" id="addspec">Add a Specialty</button>` + andrewBox("specialties");
+  return section("specs", "Specialties", x, "A Specialty adds a die when it applies, one per roll. Keep it narrow. Firearms (Sniper) is good, Brawl (Fighting) is too broad.");
+}
+function secDisc() {
+  const ref = Object.entries(V5_POWERS).map(([d, l]) => `<b>${d}</b> 1 · ${l[1].join(", ")} &nbsp;·&nbsp; 2 · ${l[2].join(", ")}`).join("<br>");
+  let x = `<div id="discs">` + S.disciplines.map((d, i) => `<div class="line"><input data-disc="${i}" data-f="name" value="${esc(d.name)}" placeholder="Discipline" list="dl-disc"><input class="num" type="number" min="0" max="5" data-disc="${i}" data-f="dots" value="${d.dots}"><input class="grow" data-disc="${i}" data-f="powers" value="${esc(d.powers)}" placeholder="Powers, comma separated"><button type="button" class="rm" data-rmdisc="${i}">Remove</button></div>`).join("") + `</div>`;
+  x += `<datalist id="dl-disc">${Object.keys(V5_POWERS).map(d => `<option>${d}</option>`).join("")}</datalist><button type="button" class="add" id="adddisc">Add a Discipline</button>`;
+  x += `<details><summary>Powers at levels 1 and 2 (V5 core)</summary><p class="ref">${ref}</p><p class="help">One power per dot, from any level up to your rating (V5 p. 244).</p></details>`;
+  return section("disc", "Disciplines", x);
+}
+function secRenownGifts() {
+  const r = S.renown; let x = `<div class="cols3">` + ["Glory", "Honor", "Wisdom"].map(k => `<div class="row"><span>${k}</span>${dotsInput("renown." + k, r[k])}</div>`).join("") + `</div>`;
+  x += `<p class="help">Put 2 dots in your tribe’s Renown and 1 in another (W5 p. 106). <b>Total Renown</b>, all three added up, is what decides which Gifts you can learn. The Renown a Gift lists only makes it stronger the more of it you have.</p>`;
+  const nat = W5_NATIVE.map(([n, rn, p, d]) => [n, `${n} · ${rn} · p. ${p}`]);
+  const au = (W5_AUSPICE[S.auspice] || { gifts: [] }).gifts.map(([n, rn, p]) => [n, `${n} · ${rn} · p. ${p}`]);
+  const tr = ((W5_TRIBE[S.tribe] || {}).gifts || []).map(([n, rn, p]) => [n, `${n} · ${rn} · p. ${p}`]);
+  x += `<div class="grid">`;
+  x += field("Native Gift (Total Renown 1)", "gifts.native", S.gifts.native, { options: nat, hint: "Open to every Garou" });
+  x += au.length ? field(`${S.auspice} Gift (Total Renown 2)`, "gifts.auspice", S.gifts.auspice, { options: au }) : field("Auspice Gift", "gifts.auspice", S.gifts.auspice, { hint: "Pick your auspice above to see the list" });
+  x += tr.length ? field(`${S.tribe} Gift (Total Renown 3)`, "gifts.tribe", S.gifts.tribe, { options: tr }) : field("Tribe Gift", "gifts.tribe", S.gifts.tribe, { hint: "Type it in. See your tribe’s Gifts in the W5 core" });
+  x += field("Rite", "rite", S.rite, { options: W5_RITES.map(([n, p, pool]) => [n, `${n} · p. ${p}${pool ? " · " + pool : ""}`]), hint: "One Rite at creation (W5 p. 108). Common Rites pp. 180–187" });
+  x += `</div>`;
+  x += `<details><summary>What the Native Gifts do, in a line</summary><p class="ref">${W5_NATIVE.map(([n, rn, p, d]) => `<b>${n}</b> (${rn}, p. ${p}). ${d}`).join("<br>")}</p></details>`;
+  x += andrewBox("gifts");
+  return section("renown", "Renown, Gifts and Rite", x);
+}
+function secEdges() {
+  let x = `<div id="edges">` + S.edges.map((e, i) => `<div class="line"><select data-edge="${i}" data-f="kind">${["Edge", "Perk"].map(k => `<option${k === e.kind ? " selected" : ""}>${k}</option>`).join("")}</select><input class="grow" data-edge="${i}" data-f="name" value="${esc(e.name)}"><button type="button" class="rm" data-rmedge="${i}">Remove</button></div>`).join("") + `</div><button type="button" class="add" id="addedge">Add an Edge or Perk</button>`;
+  return section("edges", "Edges and Perks", x, "Two Edges, or one Edge and two Perks (H5 p. 54).");
+}
+function secAdv() {
+  const sp = S.splat;
+  let x = `<div id="advs">` + S.advantages.map((a, i) => `<div class="line adv"><input class="grow" data-adv="${i}" data-f="name" value="${esc(a.name)}" list="dl-adv" placeholder="Name"><input class="num" type="number" min="0" max="5" data-adv="${i}" data-f="dots" value="${a.dots}"><select data-adv="${i}" data-f="kind">${[["merit", "Merit"], ["background", "Background"], ["flaw", "Flaw"]].map(([v, l]) => `<option value="${v}"${v === a.kind ? " selected" : ""}>${l}</option>`).join("")}</select><label class="free"><input type="checkbox" data-adv="${i}" data-f="free"${a.free ? " checked" : ""}> free</label><button type="button" class="rm" data-rmadv="${i}">Remove</button>${a.note ? `<small class="note">${esc(a.note)}</small>` : ""}</div>`).join("") + `</div>`;
+  x += `<datalist id="dl-adv">${ADV_LIST[sp].map(n => `<option>${esc(n)}</option>`).join("")}</datalist><button type="button" class="add" id="addadv">Add an Advantage or Flaw</button>`;
+  x += `<p class="help">Tick <b>free</b> for anything that came with your ${sp === "vampire" ? "predator type" : "creation choices"} or that Andrew gave you. Free ones don’t count toward the totals. Full list in ${ADV_PAGES[sp]}.</p>`;
+  x += `<details><summary>House rule. Extra Flaws for extra Advantages</summary><p class="ref">The book gives 7 points of Advantages and at least 2 points of Flaws. Here you can take more Flaws to get more Advantages. The first extra Flaw opens the gate and buys nothing. After that it’s one for one, up to two.<br>2 extra Flaws → 8 Advantages, 4 Flaws<br>3 extra Flaws → 9 Advantages, 5 Flaws, the limit<br>Andrew approves each extra Flaw. Pick ones that will come up in play.</p></details>`;
+  x += andrewBox("advantages");
+  return section("adv", "Advantages and Flaws", x);
+}
+function secTouch() {
+  const v = S.splat === "vampire";
+  let x = `<div id="touch">` + S.touchstones.map((t, i) => `<div class="line">${v ? `<input class="grow" data-touch="${i}" data-f="conviction" value="${esc(t.conviction)}" placeholder="Conviction">` : ""}<input class="grow" data-touch="${i}" data-f="name" value="${esc(t.name)}" placeholder="Touchstone, a person"><button type="button" class="rm" data-rmtouch="${i}">Remove</button></div>`).join("") + `</div><button type="button" class="add" id="addtouch">Add a ${v ? "Conviction and Touchstone" : "Touchstone"}</button>`;
+  const help = v ? "1 to 3 Convictions, each with a living human Touchstone (V5 pp. 172–173)." : S.splat === "werewolf" ? "1 to 3 people, or wolves, who keep you grounded. Most know nothing of the Garou (W5 pp. 108–109)." : "1 to 3 people. A hunter with no Touchstones can’t recover Willpower (H5 p. 56).";
+  return section("touch", v ? "Convictions and Touchstones" : "Touchstones", x + andrewBox("touchstones"), help);
+}
+function secExtra() {
+  let x = (S.extra || []).map((e, i) => `<label class="fld wide"><span>${esc(e[0])}</span><input data-extra="${i}" value="${esc(e[1])}"></label>`).join("");
+  x += field("Anything else Andrew should know", "notes", S.notes, { area: true, rows: 4, wide: true, ph: "Questions, ideas, changes, things you’re unsure about" });
+  return section("extra", "Loose ends", `<div class="grid">${x}</div>`);
+}
+
+// ---------------------------------------------------------------- page
+function render() {
+  const app = $("#app");
+  if (!S) {
+    app.innerHTML = `<section><h2>Whose sheet?</h2><p class="help">Use the link Andrew sent you. Or pick one here.</p><div class="pick">${Object.entries(PCS).map(([k, p]) => `<a href="?pc=${k}">${esc(p.name)}<small>${esc(p.player)} · ${SPLATS[p.splat].short}</small></a>`).join("")}</div><p class="help">Starting someone new? <a href="?pc=vampire">Vampire</a> · <a href="?pc=werewolf">Werewolf</a> · <a href="?pc=hunter">Hunter</a></p></section>`;
+    return;
+  }
+  document.title = `${S.name || "New character"} · Wizard’s Tower`;
+  $("#who").textContent = `${S.name || "New character"}${S.player ? " · " + S.player : ""} · ${SPLATS[S.splat].game}`;
+  let h = "";
+  if (S.open && S.open.length) h += `<section class="todo"><h2>Still needed</h2><ul>${S.open.map(o => `<li>${esc(o)}</li>`).join("")}</ul><p class="help">Everything else is already filled in from what Andrew has. Change anything that’s wrong. Not sure about something? Tick “Andrew can decide” and move on.</p></section>`;
+  h += secIdentity() + secAttrs() + secSkills() + secSpecs();
+  if (S.splat === "vampire") h += secDisc();
+  if (S.splat === "werewolf") h += secRenownGifts();
+  if (S.splat === "hunter") h += secEdges();
+  h += secAdv() + secTouch() + secExtra();
+  h += `<section class="send"><h2>Send it to Andrew</h2><div id="status"></div><div class="btns"><button type="button" class="primary" id="send">Email my sheet to Andrew</button><button type="button" id="copy">Copy as text</button><button type="button" id="reset">Start over from Andrew’s copy</button></div><p class="help">Your answers are saved in this browser as you go, so you can close the page and come back.</p><textarea id="out" readonly rows="10" hidden></textarea></section>`;
+  app.innerHTML = h;
+  update();
+}
+function update() {
+  const L = checks(); const map = { Attributes: "attrs", Skills: "skills", Specialties: "specs", "Advantages and Flaws": "adv", Touchstones: "touch", Disciplines: "disc", Renown: "renown", "Gifts and Rite": "renown", "Edges and Perks": "edges" };
+  document.querySelectorAll(".chk").forEach(c => c.innerHTML = "");
+  L.forEach(([name, ok, msg]) => { const c = document.querySelector(`.chk[data-chk="${map[name]}"]`); if (c) c.innerHTML += `<div class="${ok ? "ok" : "warn"}">${ok ? "✓" : "!"} <b>${name}.</b> ${esc(msg)}</div>`; });
+  const sumEl = $("#summary");
+  sumEl.innerHTML = L.map(([n, ok]) => `<a href="#sec-${map[n]}" class="${ok ? "ok" : "warn"}">${ok ? "✓" : "!"} ${n}</a>`).join("");
+  const d = $("#derived"); if (d) d.textContent = `Health ${(+S.attrs.Stamina || 0) + 3}${S.splat === "werewolf" ? " (plus 4 in crinos)" : ""} · Willpower ${(+S.attrs.Composure || 0) + (+S.attrs.Resolve || 0)}`;
+  save();
+}
+function setPath(path, val) {
+  const parts = path.split("."); let o = S;
+  while (parts.length > 1) o = o[parts.shift()];
+  o[parts[0]] = val;
+}
+function numberish(path, v) { return ["bp", "humanity"].includes(path) ? v : v; }
+
+document.addEventListener("click", e => {
+  const t = e.target;
+  if (t.closest(".dots") && t.dataset.v !== undefined) {
+    const g = t.closest(".dots"); const v = +t.dataset.v; setPath(g.dataset.path, v);
+    g.querySelectorAll(".dot").forEach(b => b.classList.toggle("on", +b.dataset.v <= v)); update(); return;
+  }
+  const lists = { addspec: ["specs", { skill: "", text: "" }], adddisc: ["disciplines", { name: "", dots: 1, powers: "" }], addadv: ["advantages", { name: "", dots: 1, kind: "merit" }], addtouch: ["touchstones", { name: "", conviction: "" }], addedge: ["edges", { kind: "Perk", name: "" }] };
+  if (lists[t.id]) { S[lists[t.id][0]].push(clone(lists[t.id][1])); rerenderKeep(); return; }
+  for (const [attr, key] of [["rmspec", "specs"], ["rmdisc", "disciplines"], ["rmadv", "advantages"], ["rmtouch", "touchstones"], ["rmedge", "edges"]]) {
+    if (t.dataset[attr] !== undefined) { S[key].splice(+t.dataset[attr], 1); rerenderKeep(); return; }
+  }
+  if (t.id === "copy") { const txt = sheetText(); const o = $("#out"); o.hidden = false; o.value = txt; o.select(); try { navigator.clipboard.writeText(txt); status("Copied. Paste it to Andrew on Discord or by email.", "ok"); } catch (er) { status("Select the text below and copy it.", "warn"); } return; }
+  if (t.id === "reset") { if (confirm("Throw away your changes and reload Andrew’s copy?")) { try { localStorage.removeItem(KEY()); } catch (er) {} S = load(); render(); } return; }
+  if (t.id === "send") { send(); return; }
+});
+function rerenderKeep() { const y = scrollY; render(); scrollTo(0, y); }
+document.addEventListener("input", e => {
+  const t = e.target; const ds = t.dataset;
+  if (ds.path) { setPath(ds.path, t.type === "checkbox" ? t.checked : t.value); if (["tribe", "auspice", "autonomous", "predator"].includes(ds.path) && e.type === "input") { if (t.tagName === "SELECT" || t.type === "checkbox") { if (ds.path === "tribe" && W5_TRIBE[t.value] && W5_TRIBE[t.value].patron) S.patron = W5_TRIBE[t.value].patron; rerenderKeep(); return; } } update(); return; }
+  if (ds.andrew) { S.andrew[ds.andrew] = t.checked; update(); return; }
+  if (ds.extra !== undefined) { S.extra[+ds.extra][1] = t.value; update(); return; }
+  const m = { spec: "specs", disc: "disciplines", adv: "advantages", touch: "touchstones", edge: "edges" };
+  for (const k in m) if (ds[k] !== undefined) { const it = S[m[k]][+ds[k]]; it[ds.f] = t.type === "checkbox" ? t.checked : t.type === "number" ? +t.value : t.value; update(); return; }
+});
+document.addEventListener("change", e => { if (e.target.dataset.path === "skillDist") { setPath("skillDist", e.target.value); update(); } });
+
+// ---------------------------------------------------------------- output
+function sheetText() {
+  const L = []; const dots = n => "●".repeat(n) || "0";
+  L.push(`${S.name} · ${S.player} · ${SPLATS[S.splat].game}`, "");
+  L.push(`Concept. ${S.concept}`, `Ambition. ${S.ambition}`, `Desire. ${S.desire}`);
+  if (S.splat === "vampire") L.push(`Clan ${S.clan} · ${S.generation} Generation · Blood Potency ${S.bp} · Predator ${S.predator} · Sire ${S.sire} · Humanity ${S.humanity}`);
+  if (S.splat === "werewolf") L.push(`Tribe ${S.tribe} · Auspice ${S.auspice || "?"} · Patron ${S.patron}`);
+  if (S.splat === "hunter") L.push(`Creed ${S.creed} · Drive ${S.drive}`, `Redemption. ${S.redemption}`);
+  L.push("", "ATTRIBUTES" + (S.autonomous ? " (Autonomous Learner)" : ""));
+  ATTRS.forEach((g, i) => L.push(`${ATTR_GROUPS[i]}. ` + g.map(a => `${a} ${S.attrs[a]}`).join(", ")));
+  L.push(`Health ${+S.attrs.Stamina + 3} · Willpower ${+S.attrs.Composure + +S.attrs.Resolve}`);
+  L.push("", `SKILLS (${DISTS[S.skillDist].label})`);
+  SKILLS.forEach((g, i) => { const s = g.filter(k => +S.skills[k] > 0).map(k => `${k} ${S.skills[k]}`); if (s.length) L.push(`${ATTR_GROUPS[i]}. ${s.join(", ")}`); });
+  L.push("Specialties. " + (S.specs.filter(s => s.skill).map(s => `${s.skill} (${s.text})`).join(", ") || "none"));
+  if (S.splat === "vampire") L.push("", "DISCIPLINES", ...S.disciplines.map(d => `${d.name} ${d.dots}. ${d.powers}`));
+  if (S.splat === "werewolf") {
+    L.push("", `RENOWN. Glory ${S.renown.Glory}, Honor ${S.renown.Honor}, Wisdom ${S.renown.Wisdom}`);
+    L.push(`GIFTS. Native ${S.gifts.native || "?"} · Auspice ${S.gifts.auspice || "?"} · Tribe ${S.gifts.tribe || "?"}`, `RITE. ${S.rite || "?"}`);
+  }
+  if (S.splat === "hunter") L.push("", "EDGES AND PERKS", ...S.edges.map(e => `${e.kind}. ${e.name}`));
+  const t = advTotals();
+  L.push("", `ADVANTAGES (${t.pay} of ${t.budget}) AND FLAWS (${t.fl})`, ...S.advantages.map(a => `${a.name} ${dots(+a.dots)}${a.free ? " (free)" : ""}`));
+  L.push("", S.splat === "vampire" ? "CONVICTIONS AND TOUCHSTONES" : "TOUCHSTONES", ...S.touchstones.map(x => (x.conviction ? x.conviction + " → " : "") + x.name));
+  const ex = (S.extra || []).filter(e => e[1]); if (ex.length) L.push("", "LOOSE ENDS", ...ex.map(e => `${e[0]} ${e[1]}`));
+  const ad = Object.keys(S.andrew).filter(k => S.andrew[k]); if (ad.length) L.push("", "ANDREW CAN DECIDE. " + ad.join(", "));
+  if (S.notes) L.push("", "NOTES", S.notes);
+  L.push("", "CHECKS", ...checks().map(([n, ok, m]) => `${ok ? "✓" : "!"} ${n}. ${m}`));
+  return L.join("\n");
+}
+function status(msg, cls) { const s = $("#status"); s.className = cls; s.textContent = msg; }
+async function send() {
+  const txt = sheetText(); const btn = $("#send"); btn.disabled = true; status("Sending…", "");
+  try {
+    const r = await fetch("https://formsubmit.co/ajax/" + SEND_TO, {
+      method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ _subject: `Wizard’s Tower sheet · ${S.name} (${S.player})`, _template: "box", Character: S.name, Player: S.player, Sheet: txt, Data: JSON.stringify(S) }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && String(j.success) === "true") status("Sent. Andrew has it. You can still change things and send again.", "ok");
+    else throw new Error(j.message || "The form service said no");
+  } catch (er) {
+    const o = $("#out"); o.hidden = false; o.value = txt;
+    status("That didn’t go through (" + er.message + "). Use “Copy as text” and send it to Andrew on Discord instead.", "warn");
+  }
+  btn.disabled = false;
+}
+
+S = load(); render();
+
+</script>
+</body>
+</html>
